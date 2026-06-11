@@ -7,7 +7,8 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-app.use(cors());
+app.use(cors({ origin: '*', methods: ['GET','POST','OPTIONS'], allowedHeaders: ['Content-Type'] }));
+app.options('*', cors());
 app.use(express.json({ limit: '20mb' }));
 
 app.get('/health', (req, res) => {
