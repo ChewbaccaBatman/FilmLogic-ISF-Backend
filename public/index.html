@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Film Logic — ISF Filing Platform</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:#f5f5f7;color:#1a1a1a;min-height:100vh}
+  .container{max-width:720px;margin:0 auto;padding:2rem 1.5rem}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo-mark{width:34px;height:34px;background:#1a1a2e;border-radius:8px;display:flex;align-items:center;justify-content:center}
+  .logo-mark i{color:#fff;font-size:18px}
+  .logo-text{font-size:15px;font-weight:600;color:#1a1a1a}
+  .logo-sub{font-size:12px;color:#888}
+  .nav-tabs{display:flex;gap:4px;background:#e8e8ed;border-radius:8px;padding:3px}
+  .nav-tab{padding:6px 16px;border-radius:6px;font-size:13px;cursor:pointer;border:none;background:transparent;color:#666;font-family:inherit;transition:all 0.15s}
+  .nav-tab.active{background:#fff;color:#1a1a1a;font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+  .panel{display:none}.panel.active{display:block}
+  .backend-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#d1fae5;border:1px solid #6ee7b7;border-radius:8px;font-size:12px;color:#065f46;margin-bottom:1.5rem}
+  .card{background:#fff;border-radius:12px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+  .upload-zone{border:1.5px dashed #d1d1d6;border-radius:10px;padding:1.75rem;text-align:center;cursor:pointer;background:#fafafa;transition:all 0.15s;margin-bottom:1rem}
+  .upload-zone:hover{background:#f0f0f5;border-color:#aaa}
+  .upload-zone i{font-size:28px;color:#999;display:block;margin-bottom:8px}
+  .upload-zone p{font-size:13px;color:#666}
+  .upload-zone span{font-size:11px;color:#aaa;margin-top:4px;display:block}
+  .or-div{display:flex;align-items:center;gap:10px;margin-bottom:1rem}
+  .or-div::before,.or-div::after{content:'';flex:1;height:1px;background:#e5e5e5}
+  .or-div span{font-size:11px;color:#aaa}
+  textarea{width:100%;min-height:100px;font-size:13px;padding:10px 12px;border-radius:8px;resize:vertical;font-family:inherit;color:#1a1a1a;background:#fff;border:1px solid #d1d1d6;margin-bottom:1rem;outline:none}
+  textarea:focus{border-color:#1a1a2e}
+  .row{display:flex;gap:8px;margin-bottom:1rem}
+  .btn-primary{background:#1a1a2e;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:7px;font-family:inherit;transition:background 0.15s}
+  .btn-primary:hover{background:#2d2d4e}
+  .btn-primary:disabled{opacity:0.45;cursor:not-allowed}
+  .btn-green{background:#065f46}.btn-green:hover{background:#047857}
+  .btn-secondary{background:#fff;color:#555;border:1px solid #d1d1d6;padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.15s}
+  .btn-secondary:hover{background:#f5f5f7}
+  .status-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem}
+  .status-processing{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+  .status-success{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+  .status-error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+  .status-warning{background:#fef9c3;color:#854d0e;border:1px solid #fde047}
+  .spinner{width:14px;height:14px;border:2px solid #bfdbfe;border-top-color:#1d4ed8;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .isf-result{display:none}.isf-result.visible{display:block}
+  .result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+  .result-title{font-size:14px;font-weight:600}
+  .badge-row{display:flex;gap:5px;flex-wrap:wrap}
+  .badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+  .badge-ok{background:#d1fae5;color:#065f46}
+  .badge-warn{background:#fef9c3;color:#854d0e}
+  .badge-filed{background:#dbeafe;color:#1e40af}
+  .isf-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
+  .isf-field{background:#fafafa;border:1px solid #e5e5e5;border-radius:8px;padding:10px 12px}
+  .isf-field.missing{border-color:#fde047;background:#fefce8}
+  .field-label{font-size:10px;color:#999;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em}
+  .field-value{font-size:12px;font-weight:500;word-break:break-word;color:#1a1a1a}
+  .field-value.empty{color:#d97706;font-weight:400;font-style:italic}
+  .ace-section{background:#f8f8fa;border:1px solid #e5e5e5;border-radius:10px;padding:1rem;margin-bottom:1rem}
+  .ace-header{display:flex;align-items:center;gap:8px;margin-bottom:0.75rem}
+  .ace-title{font-size:13px;font-weight:600}
+  .ace-creds{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0.75rem}
+  .ace-creds input{font-size:13px;padding:9px 11px;border-radius:8px;border:1px solid #d1d1d6;background:#fff;color:#1a1a1a;font-family:inherit;width:100%;outline:none}
+  .ace-creds input:focus{border-color:#1a1a2e}
+  .ace-log{background:#1a1a2e;border-radius:8px;padding:10px 12px;font-size:11px;font-family:'SF Mono',Monaco,monospace;color:#94a3b8;min-height:70px;max-height:150px;overflow-y:auto;white-space:pre-wrap;display:none;margin-top:0.75rem}
+  .ace-log.visible{display:block}
+  .log-ok{color:#6ee7b7}
+  .log-err{color:#fca5a5}
+  .log-info{color:#93c5fd}
+  .log-warn{color:#fde047}
+  .file-chip{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:5px 11px;font-size:12px;color:#1d4ed8;margin-bottom:0.75rem}
+  .file-chip .rm{cursor:pointer;color:#93c5fd;margin-left:4px;font-size:13px}
+  .file-chip .rm:hover{color:#ef4444}
+  #file-input{display:none}
+  .history-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:1rem}
+  .history-toolbar input{flex:1;font-size:13px;padding:9px 11px;border-radius:8px;border:1px solid #d1d1d6;background:#fff;color:#1a1a1a;font-family:inherit;outline:none}
+  .filter-btn{padding:8px 14px;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid #d1d1d6;background:#fff;color:#666;font-family:inherit}
+  .filter-btn.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+  .history-empty{text-align:center;padding:3rem 0;color:#aaa}
+  .history-empty i{font-size:36px;display:block;margin-bottom:10px}
+  .history-item{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:13px 15px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s}
+  .history-item:hover{border-color:#1a1a2e}
+  .hi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .hi-name{font-size:13px;font-weight:500}
+  .hi-badge{font-size:11px;padding:2px 10px;border-radius:20px;font-weight:500}
+  .hi-draft{background:#f3f4f6;color:#6b7280}
+  .hi-ready{background:#fef9c3;color:#854d0e}
+  .hi-filed{background:#d1fae5;color:#065f46}
+  .hi-meta{font-size:11px;color:#999}
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+  .stat-card{background:#fff;border-radius:10px;padding:14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.07)}
+  .stat-num{font-size:24px;font-weight:600;color:#1a1a2e}
+  .stat-label{font-size:11px;color:#999;margin-top:3px}
+  .detail-back{display:flex;align-items:center;gap:6px;font-size:13px;color:#666;cursor:pointer;margin-bottom:1rem}
+  .detail-back:hover{color:#1a1a1a}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-mark"><i class="ti ti-container"></i></div>
+      <div><div class="logo-text">Film Logic</div><div class="logo-sub">ISF Filing Platform</div></div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('file',this)"><i class="ti ti-file-upload"></i> File ISF</button>
+      <button class="nav-tab" onclick="switchTab('history',this)"><i class="ti ti-history"></i> History</button>
+    </div>
+  </div>
+
+  <div class="backend-bar">
+    <i class="ti ti-cloud-check"></i> Backend connected — all extraction and filing runs on your Railway server
+  </div>
+
+  <div id="panel-file" class="panel active">
+    <input type="file" id="file-input" accept=".pdf,.txt">
+    <div class="card">
+      <div class="upload-zone" id="upload-zone">
+        <i class="ti ti-file-upload"></i>
+        <p>Drop PDF here or <strong>click to browse</strong></p>
+        <span>Commercial invoice · Packing list · Bill of lading</span>
+      </div>
+      <div id="chip-container"></div>
+      <div class="or-div"><span>or paste text below</span></div>
+      <textarea id="raw-text" placeholder="Paste email body, invoice details, packing list, or any shipment info..."></textarea>
+      <div class="row">
+        <button class="btn-primary" id="extract-btn" onclick="runExtraction()"><i class="ti ti-sparkles"></i> Extract ISF fields</button>
+        <button class="btn-secondary" onclick="clearAll()">Clear</button>
+      </div>
+      <div id="status-extract"></div>
+    </div>
+
+    <div class="isf-result" id="isf-result">
+      <div class="card">
+        <div class="result-header">
+          <span class="result-title">ISF — 10+2 Fields</span>
+          <div class="badge-row" id="badge-row"></div>
+        </div>
+        <div class="isf-grid" id="isf-grid"></div>
+      </div>
+      <div class="ace-section">
+        <div class="ace-header">
+          <i class="ti ti-world-upload" style="font-size:18px;color:#666"></i>
+          <span class="ace-title">File in ACE Portal</span>
+        </div>
+        <div class="ace-creds">
+          <input type="text" id="ace-user" placeholder="ACE username" autocomplete="username">
+          <input type="password" id="ace-pass" placeholder="ACE password" autocomplete="current-password">
+        </div>
+        <div class="row" style="margin-bottom:0">
+          <button class="btn-primary btn-green" id="file-btn" onclick="runACEFiling()"><i class="ti ti-send"></i> File in ACE now</button>
+          <button class="btn-secondary" onclick="copyISF()"><i class="ti ti-copy"></i> Copy fields</button>
+        </div>
+        <div class="ace-log" id="ace-log"></div>
+        <div id="status-ace" style="margin-top:0.75rem"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-history" class="panel">
+    <div id="history-main">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total ISFs</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-filed">0</div><div class="stat-label">Filed</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-pending">0</div><div class="stat-label">Pending</div></div>
+      </div>
+      <div class="history-toolbar">
+        <input type="text" id="search-input" placeholder="Search by shipper, consignee, B/L number..." oninput="renderHistory()">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('filed',this)">Filed</button>
+        <button class="filter-btn" onclick="setFilter('ready',this)">Pending</button>
+      </div>
+      <div id="history-list"></div>
+    </div>
+    <div id="history-detail" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+const ISF_FIELDS=[
+  {key:'seller',label:'Seller (Exporter)'},
+  {key:'buyer',label:'Buyer (Importer)'},
+  {key:'importer_of_record',label:'Importer of record'},
+  {key:'consignee',label:'Consignee'},
+  {key:'manufacturer',label:'Manufacturer / supplier'},
+  {key:'ship_to_party',label:'Ship to party'},
+  {key:'country_of_origin',label:'Country of origin'},
+  {key:'hts_codes',label:'HTS commodity code(s)'},
+  {key:'container_stuffing_location',label:'Container stuffing location'},
+  {key:'consolidator',label:'Consolidator (stuffer)'},
+  {key:'vessel_voyage',label:'Vessel / voyage number'},
+  {key:'bill_of_lading',label:'Bill of lading number'},
+];
+
+let uploadedFileData=null,uploadedFileName=null,currentISF=null,historyFilter='all';
+
+const uploadZone=document.getElementById('upload-zone');
+const fileInput=document.getElementById('file-input');
+uploadZone.addEventListener('click',()=>fileInput.click());
+uploadZone.addEventListener('dragover',e=>{e.preventDefault();uploadZone.style.background='#f0f0f5'});
+uploadZone.addEventListener('dragleave',()=>uploadZone.style.background='');
+uploadZone.addEventListener('drop',e=>{e.preventDefault();uploadZone.style.background='';if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
+fileInput.addEventListener('change',()=>{if(fileInput.files[0])handleFile(fileInput.files[0])});
+
+function handleFile(f){
+  uploadedFileName=f.name;
+  const r=new FileReader();
+  r.onload=e=>{uploadedFileData=e.target.result.split(',')[1];renderChip(f.name)};
+  r.readAsDataURL(f);
+}
+function renderChip(name){
+  document.getElementById('chip-container').innerHTML=`<div class="file-chip"><i class="ti ti-file-type-pdf"></i><span>${name}</span><span class="rm" onclick="removeFile()"><i class="ti ti-x"></i></span></div>`;
+}
+function removeFile(){uploadedFileData=null;uploadedFileName=null;document.getElementById('chip-container').innerHTML='';fileInput.value='';}
+
+function setStatus(id,type,msg){
+  const el=document.getElementById(id);
+  const map={processing:`<div class="status-bar status-processing"><div class="spinner"></div><span>${msg}</span></div>`,
+    success:`<div class="status-bar status-success"><i class="ti ti-circle-check"></i><span>${msg}</span></div>`,
+    error:`<div class="status-bar status-error"><i class="ti ti-alert-circle"></i><span>${msg}</span></div>`,
+    warning:`<div class="status-bar status-warning"><i class="ti ti-alert-triangle"></i><span>${msg}</span></div>`,
+    clear:''};
+  el.innerHTML=map[type]||'';
+}
+
+async function runExtraction(){
+  const text=document.getElementById('raw-text').value.trim();
+  if(!uploadedFileData&&!text){setStatus('status-extract','error','Upload a document or paste shipment text first.');return;}
+  const btn=document.getElementById('extract-btn');btn.disabled=true;
+  setStatus('status-extract','processing','Sending to backend for extraction...');
+  document.getElementById('isf-result').classList.remove('visible');
+  try{
+    const body={};
+    if(uploadedFileData)body.pdfBase64=uploadedFileData;
+    if(text)body.text=text;
+    const res=await fetch('/extract-isf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await res.json();
+    if(!data.success)throw new Error(data.error||'Extraction failed');
+    renderISF(data.isf);
+    btn.disabled=false;
+  }catch(e){
+    setStatus('status-extract','error','Extraction failed: '+e.message);
+    btn.disabled=false;
+  }
+}
+
+function renderISF(data){
+  const grid=document.getElementById('isf-grid');
+  const badgeRow=document.getElementById('badge-row');
+  grid.innerHTML='';let filled=0,missing=0;
+  ISF_FIELDS.forEach(f=>{
+    const v=data[f.key];const has=v&&v!=='null'&&v!=='';
+    if(has)filled++;else missing++;
+    const d=document.createElement('div');
+    d.className='isf-field'+(has?'':' missing');
+    d.innerHTML=`<div class="field-label">${f.label}</div><div class="field-value${has?'':' empty'}">${has?v:'Not found in document'}</div>`;
+    grid.appendChild(d);
+  });
+  badgeRow.innerHTML=`<span class="badge badge-ok">${filled} filled</span>${missing>0?`<span class="badge badge-warn">${missing} missing</span>`:''}`;
+  setStatus('status-extract',missing===0?'success':'warning',missing===0?'All 12 fields extracted — ready to file.':`${filled}/12 fields found. Review missing fields before filing.`);
+  document.getElementById('isf-result').classList.add('visible');
+  currentISF=data;currentISF._status=missing===0?'ready':'draft';
+  currentISF._filename=uploadedFileName||'Pasted text';
+  currentISF._date=new Date().toISOString();
+  currentISF._id=currentISF._id||'isf_'+Date.now();
+  saveToHistory(currentISF);
+}
+
+function saveToHistory(isf){
+  const h=getHistory();const i=h.findIndex(x=>x._id===isf._id);
+  if(i>=0)h[i]=isf;else h.unshift(isf);
+  localStorage.setItem('fl_isf_history',JSON.stringify(h));
+}
+function getHistory(){try{return JSON.parse(localStorage.getItem('fl_isf_history')||'[]');}catch{return[];}}
+
+function switchTab(tab,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');btn.classList.add('active');
+  if(tab==='history')renderHistory();
+}
+function setFilter(f,btn){
+  historyFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderHistory();
+}
+function renderHistory(){
+  const history=getHistory();const q=(document.getElementById('search-input').value||'').toLowerCase();
+  const filtered=history.filter(h=>{if(historyFilter!=='all'&&h._status!==historyFilter)return false;if(q)return JSON.stringify(h).toLowerCase().includes(q);return true;});
+  document.getElementById('stat-total').textContent=history.length;
+  document.getElementById('stat-filed').textContent=history.filter(h=>h._status==='filed').length;
+  document.getElementById('stat-pending').textContent=history.filter(h=>h._status!=='filed').length;
+  const list=document.getElementById('history-list');
+  if(filtered.length===0){list.innerHTML=`<div class="history-empty"><i class="ti ti-inbox"></i><p>${history.length===0?'No ISFs yet. Go to File ISF to get started.':'No results match your search.'}</p></div>`;return;}
+  list.innerHTML=filtered.map(h=>{
+    const d=new Date(h._date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const name=h.consignee||h.buyer||h.seller||h._filename||'Unknown';
+    const bl=h.bill_of_lading?`B/L: ${h.bill_of_lading}`:'No B/L';
+    const cls={draft:'hi-draft',ready:'hi-ready',filed:'hi-filed'}[h._status]||'hi-draft';
+    const label={draft:'Draft',ready:'Pending',filed:'Filed'}[h._status]||h._status;
+    return `<div class="history-item" onclick="showDetail('${h._id}')"><div class="hi-top"><span class="hi-name">${name}</span><span class="hi-badge ${cls}">${label}</span></div><div class="hi-meta">${bl} · ${d}</div></div>`;
+  }).join('');
+}
+function showDetail(id){
+  const h=getHistory().find(x=>x._id===id);if(!h)return;
+  document.getElementById('history-main').style.display='none';
+  const det=document.getElementById('history-detail');det.style.display='block';
+  const fields=ISF_FIELDS.map(f=>{const v=h[f.key];const has=v&&v!=='null'&&v!=='';return`<div class="isf-field${has?'':' missing'}"><div class="field-label">${f.label}</div><div class="field-value${has?'':' empty'}">${has?v:'Not found'}</div></div>`;}).join('');
+  const cls={draft:'hi-draft',ready:'hi-ready',filed:'hi-filed'}[h._status]||'hi-draft';
+  const label={draft:'Draft',ready:'Pending',filed:'Filed'}[h._status]||h._status;
+  det.innerHTML=`<div class="detail-back" onclick="backToHistory()"><i class="ti ti-arrow-left"></i> Back</div><div class="result-header"><span class="result-title">${h.consignee||h.buyer||h._filename||'ISF Record'}</span><div class="badge-row"><span class="badge ${cls==='hi-filed'?'badge-filed':cls==='hi-ready'?'badge-warn':'badge-ok'}">${label}</span></div></div><div class="isf-grid">${fields}</div>${h._status!=='filed'?`<div class="row" style="margin-top:1rem"><button class="btn-primary" onclick="loadForFiling('${h._id}')"><i class="ti ti-send"></i> Load & file in ACE</button></div>`:`<p style="font-size:12px;color:#6b7280;margin-top:1rem"><i class="ti ti-circle-check" style="color:#065f46"></i> Filed in ACE on ${new Date(h._date).toLocaleDateString()}</p>`}`;
+}
+function backToHistory(){document.getElementById('history-detail').style.display='none';document.getElementById('history-main').style.display='block';renderHistory();}
+function loadForFiling(id){
+  const h=getHistory().find(x=>x._id===id);if(!h)return;currentISF=h;
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-file').classList.add('active');
+  document.querySelectorAll('.nav-tab')[0].classList.add('active');
+  renderISF(h);
+}
+async function runACEFiling(){
+  if(!currentISF){setStatus('status-ace','error','No ISF loaded.');return;}
+  const user=document.getElementById('ace-user').value.trim();
+  const pass=document.getElementById('ace-pass').value.trim();
+  if(!user||!pass){setStatus('status-ace','warning','Enter ACE credentials to file.');return;}
+  const btn=document.getElementById('file-btn');btn.disabled=true;
+  const log=document.getElementById('ace-log');log.classList.add('visible');log.innerHTML='';
+  function addLog(msg,cls='log-info'){const l=document.createElement('div');l.className=cls;l.textContent='['+new Date().toLocaleTimeString()+'] '+msg;log.appendChild(l);log.scrollTop=log.scrollHeight;}
+  setStatus('status-ace','processing','Connecting to ACE portal...');addLog('Sending to backend...','log-info');
+  try{
+    const response=await fetch('/file-isf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({credentials:{username:user,password:pass},isf:currentISF})});
+    const reader=response.body.getReader();const decoder=new TextDecoder();
+    while(true){
+      const{done,value}=await reader.read();if(done)break;
+      const lines=decoder.decode(value).split('\n').filter(l=>l.startsWith('data:'));
+      for(const line of lines){
+        try{
+          const ev=JSON.parse(line.replace('data:','').trim());
+          if(ev.type==='step')addLog(ev.message,'log-info');
+          else if(ev.type==='warn')addLog(ev.message,'log-warn');
+          else if(ev.type==='done'){addLog(ev.message,'log-ok');if(ev.confirmation)addLog('Confirmation: '+ev.confirmation,'log-ok');}
+          else if(ev.type==='error'){addLog('Error: '+ev.message,'log-err');throw new Error(ev.message);}
+        }catch{}
+      }
+    }
+    currentISF._status='filed';saveToHistory(currentISF);
+    setStatus('status-ace','success','ISF filed in ACE. Saved to history.');
+    document.getElementById('badge-row').innerHTML+=`<span class="badge badge-filed">Filed in ACE</span>`;
+    btn.disabled=false;
+  }catch(e){setStatus('status-ace','error','Filing failed: '+e.message);btn.disabled=false;}
+}
+function copyISF(){
+  if(!currentISF)return;
+  const lines=ISF_FIELDS.map(f=>`${f.label}: ${currentISF[f.key]||'MISSING'}`).join('\n');
+  navigator.clipboard.writeText(lines).then(()=>{
+    const btn=event.target.closest('button');const orig=btn.innerHTML;
+    btn.innerHTML='<i class="ti ti-check"></i> Copied!';setTimeout(()=>btn.innerHTML=orig,2000);
+  });
+}
+function clearAll(){
+  document.getElementById('raw-text').value='';removeFile();
+  document.getElementById('status-extract').innerHTML='';
+  document.getElementById('status-ace').innerHTML='';
+  document.getElementById('ace-log').innerHTML='';
+  document.getElementById('ace-log').classList.remove('visible');
+  document.getElementById('isf-result').classList.remove('visible');
+  currentISF=null;
+}
+</script>
+</body>
+</html>
